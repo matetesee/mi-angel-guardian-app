@@ -7,7 +7,9 @@
 <meta name="theme-color" content="#1b0f2e">
 <title>Mi Ángel Guardián</title>
 <meta name="description" content="Descubre a tu ángel guardián, recibe mensajes diarios y guarda tu perfil espiritual.">
+<link rel="manifest" href="./manifest.json">
 <link rel="icon" href="./img/favicon.png">
+<link rel="apple-touch-icon" href="./img/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -16,6 +18,34 @@
 </head>
 <body>
 <div id="app">
+
+  <!-- Onboarding overlay (first visit) -->
+  <div id="onboarding" class="onboarding" hidden>
+    <div class="onboarding-card">
+      <div class="hero-icon">
+        <svg viewBox="0 0 100 100" width="60" height="60">
+          <defs>
+            <linearGradient id="haloGrad0" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#F25FB9"/>
+              <stop offset="100%" stop-color="#7A00A8"/>
+            </linearGradient>
+          </defs>
+          <ellipse cx="50" cy="30" rx="26" ry="9" fill="none" stroke="#FFD700" stroke-width="4"/>
+          <path d="M50 40 C30 45 24 65 30 88 C36 74 44 66 50 64 C56 66 64 74 70 88 C76 65 70 45 50 40Z" fill="url(#haloGrad0)"/>
+        </svg>
+      </div>
+      <h1>Bienvenido a Mi Ángel Guardián</h1>
+      <p class="hero-sub">Antes de empezar, contame un poco sobre vos.</p>
+
+      <label class="field-label" for="onb-name">¿Cómo te llamás?</label>
+      <input class="field-input" id="onb-name" type="text" placeholder="Tu nombre" maxlength="30" autocomplete="given-name">
+
+      <label class="field-label" for="onb-birthdate">Fecha de nacimiento <span class="optional-tag">(opcional, para tu número angelical)</span></label>
+      <input class="field-input" id="onb-birthdate" type="date">
+
+      <button class="btn-primary btn-pulse" id="btn-onboarding-continue">Comenzar <i class="fa-solid fa-arrow-right"></i></button>
+    </div>
+  </div>
 
   <!-- Phone shell -->
   <div class="phone">
@@ -28,7 +58,13 @@
         </span>
         <span class="brand-name">Mi Ángel Guardián</span>
       </div>
-      <button class="icon-btn" id="btn-reset" title="Reiniciar perfil"><i class="fa-solid fa-rotate-left"></i></button>
+      <div class="header-actions">
+        <button class="streak-chip" id="btn-streak-chip" title="Tu racha diaria">
+          <i class="fa-solid fa-fire"></i><span id="streak-chip-count">0</span>
+        </button>
+        <button class="icon-btn" id="btn-install" title="Instalar app" hidden><i class="fa-solid fa-download"></i></button>
+        <button class="icon-btn" id="btn-reset" title="Reiniciar perfil"><i class="fa-solid fa-rotate-left"></i></button>
+      </div>
     </header>
 
     <!-- Screens -->
@@ -50,7 +86,7 @@
               <path d="M50 40 C30 45 24 65 30 88 C36 74 44 66 50 64 C56 66 64 74 70 88 C76 65 70 45 50 40Z" fill="url(#haloGrad)"/>
             </svg>
           </div>
-          <h1>Descubre a tu Ángel Guardián</h1>
+          <h1 id="home-greeting">Descubre a tu Ángel Guardián</h1>
           <p class="hero-sub">Un cuestionario breve para revelar qué arcángel guía tu camino, con mensajes y afirmaciones para cada día.</p>
           <button class="btn-primary btn-pulse" id="btn-start-quiz">Descubrir mi ángel <i class="fa-solid fa-arrow-right"></i></button>
         </div>
@@ -119,6 +155,11 @@
             <p id="angel-affirmation">—</p>
           </div>
 
+          <div class="info-card number-card" id="angel-number-card">
+            <h4><i class="fa-solid fa-hashtag"></i> Tu número angelical</h4>
+            <div id="angel-number-content"><!-- filled by JS --></div>
+          </div>
+
           <button class="btn-secondary" id="btn-retake">Repetir el test</button>
         </div>
       </section>
@@ -126,8 +167,9 @@
       <!-- MESSAGES -->
       <section class="screen" id="screen-messages" data-screen hidden>
         <div class="messages-tabs">
-          <button class="msg-tab active" data-msgtab="daily">Mensaje del día</button>
+          <button class="msg-tab active" data-msgtab="daily">Hoy</button>
           <button class="msg-tab" data-msgtab="fav">Favoritos <span id="fav-count"></span></button>
+          <button class="msg-tab" data-msgtab="cal">Calendario</button>
         </div>
 
         <div id="messages-daily" class="messages-pane">
@@ -143,6 +185,69 @@
           <div id="fav-list" class="fav-list"></div>
           <p class="empty-hint" id="fav-empty-hint" hidden>Aún no guardaste mensajes. Tocá el corazón en un mensaje para guardarlo acá.</p>
         </div>
+
+        <div id="messages-cal" class="messages-pane" hidden>
+          <div id="cal-list" class="fav-list"></div>
+          <p class="empty-hint" id="cal-empty-hint" hidden>Todavía no visitaste la app ningún día. ¡Volvé mañana para empezar tu historial!</p>
+        </div>
+      </section>
+
+      <!-- PERFIL -->
+      <section class="screen" id="screen-perfil" data-screen hidden>
+        <div class="messages-tabs">
+          <button class="msg-tab active" data-perfiltab="perfil">Mi Perfil</button>
+          <button class="msg-tab" data-perfiltab="diario">Diario</button>
+        </div>
+
+        <div id="perfil-perfil" class="messages-pane">
+
+          <div class="info-card">
+            <h4><i class="fa-solid fa-user"></i> Tus datos</h4>
+            <label class="field-label" for="perfil-name">Nombre</label>
+            <input class="field-input" id="perfil-name" type="text" maxlength="30" placeholder="Tu nombre">
+            <label class="field-label" for="perfil-birthdate">Fecha de nacimiento</label>
+            <input class="field-input" id="perfil-birthdate" type="date">
+            <button class="btn-secondary" id="btn-perfil-save" style="margin-top:10px">Guardar</button>
+          </div>
+
+          <div class="info-card" id="perfil-number-card">
+            <h4><i class="fa-solid fa-hashtag"></i> Número angelical</h4>
+            <div id="perfil-number-content"><!-- filled by JS --></div>
+          </div>
+
+          <div class="info-card">
+            <h4><i class="fa-solid fa-fire"></i> Racha diaria</h4>
+            <div class="streak-row">
+              <div class="streak-stat"><span class="streak-num" id="streak-current">0</span><span class="streak-label">días seguidos</span></div>
+              <div class="streak-stat"><span class="streak-num" id="streak-longest">0</span><span class="streak-label">racha máxima</span></div>
+            </div>
+          </div>
+
+          <div class="info-card">
+            <h4><i class="fa-solid fa-medal"></i> Logros</h4>
+            <div class="badges-grid" id="badges-grid"><!-- filled by JS --></div>
+          </div>
+
+          <div class="info-card">
+            <h4><i class="fa-solid fa-music"></i> Sonido ambiente</h4>
+            <div class="sound-row">
+              <span class="tile-sub">Un fondo suave y relajante mientras usás la app</span>
+              <button class="toggle-switch" id="btn-sound-toggle" aria-pressed="false"><span class="toggle-knob"></span></button>
+            </div>
+          </div>
+
+          <button class="btn-secondary danger" id="btn-perfil-reset"><i class="fa-solid fa-trash"></i> Reiniciar todo mi perfil</button>
+        </div>
+
+        <div id="perfil-diario" class="messages-pane" hidden>
+          <div class="info-card">
+            <h4><i class="fa-solid fa-feather-pointed"></i> Nueva reflexión</h4>
+            <textarea class="field-input journal-textarea" id="journal-text" placeholder="¿Qué sentís hoy? Escribí lo que tu corazón necesite soltar o agradecer..." maxlength="600"></textarea>
+            <button class="btn-secondary" id="btn-journal-save" style="margin-top:10px">Guardar reflexión</button>
+          </div>
+          <div id="journal-list" class="fav-list"></div>
+          <p class="empty-hint" id="journal-empty-hint" hidden>Todavía no escribiste ninguna reflexión.</p>
+        </div>
       </section>
 
     </main>
@@ -153,6 +258,7 @@
       <button class="tab-btn" data-tab="quiz"><i class="fa-solid fa-list-check"></i><span>Test</span></button>
       <button class="tab-btn" data-tab="angel"><i class="fa-solid fa-feather-pointed"></i><span>Mi Ángel</span></button>
       <button class="tab-btn" data-tab="messages"><i class="fa-solid fa-envelope-open-text"></i><span>Mensajes</span></button>
+      <button class="tab-btn" data-tab="perfil"><i class="fa-solid fa-user"></i><span>Perfil</span></button>
     </nav>
 
   </div>

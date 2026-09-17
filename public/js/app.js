@@ -1,7 +1,8 @@
 (function () {
   "use strict";
 
-  var STORAGE_KEY = "maga_state_v1";
+  var STORAGE_KEY = "maga_state_v2";
+  var OLD_STORAGE_KEY = "maga_state_v1";
 
   var ANGELS = {
     miguel: {
@@ -141,18 +142,63 @@
     "Todo lo que sembraste con amor está por florecer.",
   ];
 
+  var ANGEL_NUMBERS = {
+    1: { num: "111", title: "Nuevos comienzos", text: "Es momento de plantar semillas nuevas. Tus pensamientos se están manifestando muy rápido: enfocá tu mente en lo que sí querés." },
+    2: { num: "222", title: "Equilibrio y confianza", text: "Todo se está alineando de a poco, aunque no lo veas todavía. Mantené la fe y cuidá tus vínculos más cercanos." },
+    3: { num: "333", title: "Guía y expresión", text: "Estás rodeado de guía espiritual. Es un buen momento para expresarte con libertad y confiar en tu creatividad." },
+    4: { num: "444", title: "Protección angelical", text: "Tus ángeles están muy cerca tuyo, trabajando en silencio para sostenerte. No estás solo en lo que estás atravesando." },
+    5: { num: "555", title: "Cambios en camino", text: "Se acerca una transformación importante. Soltá lo que ya cumplió su ciclo para dejar espacio a lo nuevo." },
+    6: { num: "666", title: "Reequilibrio", text: "Es momento de balancear lo material con lo espiritual. Revisá en qué estás poniendo tu energía últimamente." },
+    7: { num: "777", title: "Alineación espiritual", text: "Estás en sintonía con tu camino. La suerte y las señales se multiplican cuando seguís confiando en tu intuición." },
+    8: { num: "888", title: "Abundancia", text: "Un ciclo de abundancia y recompensas está por abrirse. Lo que sembraste con esfuerzo empieza a dar frutos." },
+    9: { num: "999", title: "Cierre de ciclo", text: "Algo importante está llegando a su fin para darle lugar a un capítulo nuevo. Soltar con gratitud acelera la transición." },
+  };
+
+  var BADGES = [
+    { key: "iniciado", icon: "fa-seedling", label: "Iniciado", check: function (s) { return !!s.angelKey; } },
+    { key: "conectado", icon: "fa-bolt", label: "Conectado", check: function (s) { return (s.streak && s.streak.count || 0) >= 3; } },
+    { key: "iluminado", icon: "fa-sun", label: "Iluminado", check: function (s) { return (s.streak && s.streak.count || 0) >= 7; } },
+    { key: "devoto", icon: "fa-crown", label: "Fiel Devoto", check: function (s) { return (s.streak && s.streak.longest || 0) >= 30; } },
+    { key: "coleccionista", icon: "fa-gem", label: "Coleccionista", check: function (s) { return (s.favorites || []).length >= 5; } },
+    { key: "escritor", icon: "fa-pen-nib", label: "Alma Escritora", check: function (s) { return (s.journal || []).length >= 5; } },
+    { key: "numerologia", icon: "fa-hashtag", label: "Numerología", check: function (s) { return !!s.birthdate; } },
+    { key: "explorador", icon: "fa-compass", label: "Explorador", check: function (s) { return Object.keys(s.messageHistory || {}).length >= 5; } },
+  ];
+
+  var MONTHS_ES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+
+  function defaultState() {
+    return {
+      answers: [],
+      angelKey: null,
+      favorites: [],
+      lastDailyIndex: null,
+      lastDailyDate: null,
+      name: null,
+      birthdate: null,
+      journal: [],
+      streak: { count: 0, longest: 0, lastVisitDate: null },
+      messageHistory: {},
+    };
+  }
+
   var state = loadState();
 
   function loadState() {
     try {
       var raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return { answers: [], angelKey: null, favorites: [], lastDailyIndex: null, lastDailyDate: null };
+      if (!raw) raw = localStorage.getItem(OLD_STORAGE_KEY);
+      var base = defaultState();
+      if (!raw) return base;
       var parsed = JSON.parse(raw);
-      parsed.answers = parsed.answers || [];
-      parsed.favorites = parsed.favorites || [];
-      return parsed;
+      return Object.assign(base, parsed, {
+        streak: Object.assign(base.streak, parsed.streak || {}),
+        messageHistory: parsed.messageHistory || {},
+        journal: parsed.journal || [],
+        favorites: parsed.favorites || [],
+      });
     } catch (e) {
-      return { answers: [], angelKey: null, favorites: [], lastDailyIndex: null, lastDailyDate: null };
+      return defaultState();
     }
   }
 
@@ -160,6 +206,19 @@
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     } catch (e) {}
+  }
+
+  function dateKey(d) {
+    var y = d.getFullYear();
+    var m = String(d.getMonth() + 1).padStart(2, "0");
+    var day = String(d.getDate()).padStart(2, "0");
+    return y + "-" + m + "-" + day;
+  }
+
+  function formatDateEs(key) {
+    var parts = key.split("-");
+    var y = parts[0], m = parseInt(parts[1], 10) - 1, d = parseInt(parts[2], 10);
+    return d + " " + MONTHS_ES[m] + " " + y;
   }
 
   // ---------- Navigation ----------
@@ -176,6 +235,7 @@
     if (name === "home") renderHome();
     if (name === "angel") renderAngel();
     if (name === "messages") renderMessages();
+    if (name === "perfil") renderPerfil();
   }
 
   tabButtons.forEach(function (btn) {
@@ -192,16 +252,72 @@
   document.getElementById("btn-empty-start").addEventListener("click", startQuiz);
   document.getElementById("btn-retake").addEventListener("click", startQuiz);
 
-  document.getElementById("btn-reset").addEventListener("click", function () {
-    if (confirm("¿Reiniciar tu perfil y borrar tu ángel guardián guardado?")) {
-      state = { answers: [], angelKey: null, favorites: [], lastDailyIndex: null, lastDailyDate: null };
+  function resetAll() {
+    if (confirm("¿Reiniciar tu perfil y borrar toda tu información guardada?")) {
+      state = defaultState();
       saveState();
       showScreen("home");
     }
+  }
+  document.getElementById("btn-reset").addEventListener("click", resetAll);
+  document.getElementById("btn-perfil-reset").addEventListener("click", resetAll);
+
+  // ---------- Onboarding ----------
+  var onboardingEl = document.getElementById("onboarding");
+
+  function maybeShowOnboarding() {
+    if (!state.name) {
+      onboardingEl.hidden = false;
+    } else {
+      onboardingEl.hidden = true;
+    }
+  }
+
+  document.getElementById("btn-onboarding-continue").addEventListener("click", function () {
+    var name = document.getElementById("onb-name").value.trim();
+    var birthdate = document.getElementById("onb-birthdate").value;
+    if (!name) {
+      document.getElementById("onb-name").focus();
+      return;
+    }
+    state.name = name;
+    if (birthdate) state.birthdate = birthdate;
+    saveState();
+    onboardingEl.hidden = true;
+    afterBoot();
   });
+
+  // ---------- Streak & message history ----------
+  function bumpStreak() {
+    var today = dateKey(new Date());
+    if (state.streak.lastVisitDate !== today) {
+      var y = new Date();
+      y.setDate(y.getDate() - 1);
+      var yesterdayKey = dateKey(y);
+      if (state.streak.lastVisitDate === yesterdayKey) {
+        state.streak.count = (state.streak.count || 0) + 1;
+      } else {
+        state.streak.count = 1;
+      }
+      state.streak.longest = Math.max(state.streak.longest || 0, state.streak.count);
+      state.streak.lastVisitDate = today;
+    }
+    var daily = getDailyMessage();
+    state.messageHistory[today] = daily.index;
+    saveState();
+    updateStreakChip();
+  }
+
+  function updateStreakChip() {
+    document.getElementById("streak-chip-count").textContent = state.streak.count || 0;
+  }
 
   // ---------- Home ----------
   function renderHome() {
+    document.getElementById("home-greeting").textContent = state.name
+      ? "Hola, " + state.name + " ✨"
+      : "Descubre a tu Ángel Guardián";
+
     var startBtn = document.getElementById("btn-start-quiz");
     startBtn.innerHTML = state.angelKey
       ? 'Repetir el test <i class="fa-solid fa-rotate"></i>'
@@ -227,8 +343,23 @@
     msgTile.innerHTML = '<i class="fa-solid fa-envelope-open-text"></i><span class="tile-title">Mensaje del día</span><span class="tile-sub">' + state.favorites.length + " " + favWord + "</span>";
     msgTile.addEventListener("click", function () { showScreen("messages"); });
 
+    var streakTile = document.createElement("div");
+    streakTile.className = "status-tile";
+    streakTile.innerHTML = '<i class="fa-solid fa-fire"></i><span class="tile-title">' + (state.streak.count || 0) + (state.streak.count === 1 ? " día seguido" : " días seguidos") + '</span><span class="tile-sub">Racha máxima: ' + (state.streak.longest || 0) + '</span>';
+    streakTile.addEventListener("click", function () { showScreen("perfil"); });
+
+    var journalTile = document.createElement("div");
+    journalTile.className = "status-tile";
+    journalTile.innerHTML = '<i class="fa-solid fa-feather-pointed"></i><span class="tile-title">Diario</span><span class="tile-sub">' + state.journal.length + (state.journal.length === 1 ? " reflexión" : " reflexiones") + '</span>';
+    journalTile.addEventListener("click", function () {
+      showScreen("perfil");
+      switchPerfilTab("diario");
+    });
+
     grid.appendChild(angelTile);
     grid.appendChild(msgTile);
+    grid.appendChild(streakTile);
+    grid.appendChild(journalTile);
   }
 
   // ---------- Quiz ----------
@@ -310,6 +441,40 @@
     }, 2400);
   }
 
+  // ---------- Angel number ----------
+  function digitalRoot(n) {
+    n = Math.abs(n);
+    while (n > 9) {
+      n = String(n).split("").reduce(function (a, d) { return a + Number(d); }, 0);
+    }
+    return n === 0 ? 9 : n;
+  }
+
+  function computeAngelNumber(birthdate) {
+    var digits = birthdate.replace(/-/g, "");
+    var sum = digits.split("").reduce(function (a, d) { return a + Number(d); }, 0);
+    var root = digitalRoot(sum);
+    return ANGEL_NUMBERS[root];
+  }
+
+  function renderAngelNumberBlock(container, editable) {
+    if (state.birthdate) {
+      var res = computeAngelNumber(state.birthdate);
+      container.innerHTML =
+        '<div class="number-pill">' + res.num + "</div>" +
+        "<strong>" + res.title + "</strong>" +
+        "<p>" + res.text + "</p>";
+    } else if (editable) {
+      container.innerHTML = '<p class="tile-sub">Cargá tu fecha de nacimiento arriba y guardá para descubrir tu número angelical.</p>';
+    } else {
+      container.innerHTML =
+        '<div class="number-empty"><p>Todavía no cargaste tu fecha de nacimiento.</p>' +
+        '<button class="btn-secondary" id="btn-goto-perfil-number">Agregarla en Mi Perfil</button></div>';
+      var btn = container.querySelector("#btn-goto-perfil-number");
+      if (btn) btn.addEventListener("click", function () { showScreen("perfil"); });
+    }
+  }
+
   // ---------- Angel result ----------
   function renderAngel() {
     var empty = document.getElementById("angel-empty");
@@ -328,13 +493,10 @@
     document.getElementById("angel-message").textContent = a.message;
     document.getElementById("angel-prayer").textContent = a.prayer;
     document.getElementById("angel-affirmation").textContent = getDailyMessage().text;
+    renderAngelNumberBlock(document.getElementById("angel-number-content"), false);
   }
 
   // ---------- Messages ----------
-  function dateKey(d) {
-    return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
-  }
-
   function getDailyMessage() {
     var today = dateKey(new Date());
     if (state.lastDailyDate === today && state.lastDailyIndex != null) {
@@ -354,6 +516,7 @@
     } while (idx === state.lastDailyIndex && DAILY_MESSAGES.length > 1);
     state.lastDailyIndex = idx;
     state.lastDailyDate = dateKey(new Date());
+    state.messageHistory[state.lastDailyDate] = idx;
     saveState();
     renderMessages();
   }
@@ -387,6 +550,27 @@
         favList.appendChild(row);
       });
     }
+
+    renderCalendar();
+  }
+
+  function renderCalendar() {
+    var calList = document.getElementById("cal-list");
+    var hint = document.getElementById("cal-empty-hint");
+    var keys = Object.keys(state.messageHistory).sort().reverse().slice(0, 30);
+    calList.innerHTML = "";
+    if (keys.length === 0) {
+      hint.hidden = false;
+      return;
+    }
+    hint.hidden = true;
+    keys.forEach(function (key) {
+      var idx = state.messageHistory[key];
+      var row = document.createElement("div");
+      row.className = "fav-item";
+      row.innerHTML = '<p><span class="fav-item-date">' + formatDateEs(key) + "</span>" + DAILY_MESSAGES[idx] + "</p>";
+      calList.appendChild(row);
+    });
   }
 
   document.getElementById("btn-new-message").addEventListener("click", shuffleDailyMessage);
@@ -400,17 +584,203 @@
     renderMessages();
   });
 
-  document.querySelectorAll(".msg-tab").forEach(function (tab) {
+  document.querySelectorAll("[data-msgtab]").forEach(function (tab) {
     tab.addEventListener("click", function () {
-      document.querySelectorAll(".msg-tab").forEach(function (t) { t.classList.remove("active"); });
+      document.querySelectorAll("[data-msgtab]").forEach(function (t) { t.classList.remove("active"); });
       tab.classList.add("active");
       var which = tab.dataset.msgtab;
       document.getElementById("messages-daily").hidden = which !== "daily";
       document.getElementById("messages-fav").hidden = which !== "fav";
-      if (which === "fav") renderMessages();
+      document.getElementById("messages-cal").hidden = which !== "cal";
+      if (which === "fav" || which === "cal") renderMessages();
     });
   });
 
+  // ---------- Perfil ----------
+  function switchPerfilTab(which) {
+    document.querySelectorAll("[data-perfiltab]").forEach(function (t) {
+      t.classList.toggle("active", t.dataset.perfiltab === which);
+    });
+    document.getElementById("perfil-perfil").hidden = which !== "perfil";
+    document.getElementById("perfil-diario").hidden = which !== "diario";
+  }
+
+  document.querySelectorAll("[data-perfiltab]").forEach(function (tab) {
+    tab.addEventListener("click", function () { switchPerfilTab(tab.dataset.perfiltab); });
+  });
+
+  function renderBadges() {
+    var grid = document.getElementById("badges-grid");
+    grid.innerHTML = "";
+    BADGES.forEach(function (b) {
+      var unlocked = b.check(state);
+      var chip = document.createElement("div");
+      chip.className = "badge-chip" + (unlocked ? " unlocked" : "");
+      chip.innerHTML = '<i class="fa-solid ' + b.icon + '"></i><span>' + b.label + "</span>";
+      grid.appendChild(chip);
+    });
+  }
+
+  function renderPerfil() {
+    document.getElementById("perfil-name").value = state.name || "";
+    document.getElementById("perfil-birthdate").value = state.birthdate || "";
+    renderAngelNumberBlock(document.getElementById("perfil-number-content"), true);
+    document.getElementById("streak-current").textContent = state.streak.count || 0;
+    document.getElementById("streak-longest").textContent = state.streak.longest || 0;
+    renderBadges();
+    renderJournal();
+  }
+
+  document.getElementById("btn-perfil-save").addEventListener("click", function () {
+    var name = document.getElementById("perfil-name").value.trim();
+    var birthdate = document.getElementById("perfil-birthdate").value;
+    state.name = name || state.name;
+    state.birthdate = birthdate || null;
+    saveState();
+    renderPerfil();
+    renderHome();
+  });
+
+  // ---------- Journal ----------
+  function renderJournal() {
+    var list = document.getElementById("journal-list");
+    var hint = document.getElementById("journal-empty-hint");
+    list.innerHTML = "";
+    if (!state.journal.length) {
+      hint.hidden = false;
+      return;
+    }
+    hint.hidden = true;
+    state.journal.forEach(function (entry) {
+      var row = document.createElement("div");
+      row.className = "fav-item";
+      row.innerHTML = '<p><span class="fav-item-date">' + formatDateEs(entry.date) + "</span>" + entry.text + '</p><button aria-label="Borrar"><i class="fa-solid fa-trash"></i></button>';
+      row.querySelector("button").addEventListener("click", function () {
+        state.journal = state.journal.filter(function (e) { return e.id !== entry.id; });
+        saveState();
+        renderJournal();
+        renderBadges();
+      });
+      list.appendChild(row);
+    });
+  }
+
+  document.getElementById("btn-journal-save").addEventListener("click", function () {
+    var textarea = document.getElementById("journal-text");
+    var text = textarea.value.trim();
+    if (!text) return;
+    state.journal.unshift({ id: Date.now(), date: dateKey(new Date()), text: text });
+    saveState();
+    textarea.value = "";
+    renderJournal();
+    renderBadges();
+  });
+
+  // ---------- Ambient sound (Web Audio, synthesized — no external files) ----------
+  var audioCtx = null;
+  var audioNodes = null;
+  var soundPlaying = false;
+
+  function startAmbientSound() {
+    if (!audioCtx) {
+      var Ctx = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new Ctx();
+    }
+    if (audioCtx.state === "suspended") audioCtx.resume();
+
+    var master = audioCtx.createGain();
+    master.gain.value = 0;
+    master.connect(audioCtx.destination);
+    master.gain.linearRampToValueAtTime(0.06, audioCtx.currentTime + 1.5);
+
+    var filter = audioCtx.createBiquadFilter();
+    filter.type = "lowpass";
+    filter.frequency.value = 800;
+    filter.connect(master);
+
+    var freqs = [174, 261.6, 329.6];
+    var oscillators = freqs.map(function (f) {
+      var osc = audioCtx.createOscillator();
+      osc.type = "sine";
+      osc.frequency.value = f;
+      var g = audioCtx.createGain();
+      g.gain.value = 1 / freqs.length;
+      osc.connect(g);
+      g.connect(filter);
+      osc.start();
+      return osc;
+    });
+
+    var lfo = audioCtx.createOscillator();
+    lfo.frequency.value = 0.08;
+    var lfoGain = audioCtx.createGain();
+    lfoGain.gain.value = 300;
+    lfo.connect(lfoGain);
+    lfoGain.connect(filter.frequency);
+    lfo.start();
+
+    audioNodes = { master: master, filter: filter, oscillators: oscillators, lfo: lfo };
+    soundPlaying = true;
+  }
+
+  function stopAmbientSound() {
+    if (!audioNodes) return;
+    var now = audioCtx.currentTime;
+    audioNodes.master.gain.linearRampToValueAtTime(0, now + 0.8);
+    var nodes = audioNodes;
+    setTimeout(function () {
+      nodes.oscillators.forEach(function (o) { try { o.stop(); } catch (e) {} });
+      try { nodes.lfo.stop(); } catch (e) {}
+    }, 900);
+    audioNodes = null;
+    soundPlaying = false;
+  }
+
+  document.getElementById("btn-sound-toggle").addEventListener("click", function () {
+    var btn = this;
+    if (soundPlaying) {
+      stopAmbientSound();
+      btn.setAttribute("aria-pressed", "false");
+    } else {
+      startAmbientSound();
+      btn.setAttribute("aria-pressed", "true");
+    }
+  });
+
+  // ---------- PWA install prompt ----------
+  var deferredInstallPrompt = null;
+  window.addEventListener("beforeinstallprompt", function (e) {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    document.getElementById("btn-install").hidden = false;
+  });
+  document.getElementById("btn-install").addEventListener("click", function () {
+    if (!deferredInstallPrompt) return;
+    deferredInstallPrompt.prompt();
+    deferredInstallPrompt.finally && deferredInstallPrompt.finally(function () {});
+    deferredInstallPrompt = null;
+    document.getElementById("btn-install").hidden = true;
+  });
+  window.addEventListener("appinstalled", function () {
+    document.getElementById("btn-install").hidden = true;
+  });
+
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () {
+      navigator.serviceWorker.register("./sw.js").catch(function () {});
+    });
+  }
+
   // ---------- Boot ----------
-  showScreen("home");
+  function afterBoot() {
+    bumpStreak();
+    showScreen("home");
+  }
+
+  maybeShowOnboarding();
+  if (state.name) {
+    afterBoot();
+  } else {
+    showScreen("home");
+  }
 })();
