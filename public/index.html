@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1b0f2e">
+<title>Mi Ángel Guardián</title>
+<meta name="description" content="Descubre a tu ángel guardián, recibe mensajes diarios y guarda tu perfil espiritual.">
+<link rel="icon" href="./img/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- Phone shell -->
+  <div class="phone">
+
+    <!-- Top status/header -->
+    <header class="app-header">
+      <div class="app-header-brand">
+        <span class="brand-glyph">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M12 2c.6 2.6 2.4 4.4 5 5-2.6.6-4.4 2.4-5 5-.6-2.6-2.4-4.4-5-5 2.6-.6 4.4-2.4 5-5Z"/><path fill="currentColor" opacity=".6" d="M19 14c.35 1.5 1.4 2.55 2.9 2.9-1.5.35-2.55 1.4-2.9 2.9-.35-1.5-1.4-2.55-2.9-2.9 1.5-.35 2.55-1.4 2.9-2.9Z"/></svg>
+        </span>
+        <span class="brand-name">Mi Ángel Guardián</span>
+      </div>
+      <button class="icon-btn" id="btn-reset" title="Reiniciar perfil"><i class="fa-solid fa-rotate-left"></i></button>
+    </header>
+
+    <!-- Screens -->
+    <main class="screens">
+
+      <!-- HOME -->
+      <section class="screen" id="screen-home" data-screen>
+        <div class="hero-card">
+          <div class="hero-glow"></div>
+          <div class="hero-icon">
+            <svg viewBox="0 0 100 100" width="72" height="72">
+              <defs>
+                <linearGradient id="haloGrad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#F25FB9"/>
+                  <stop offset="100%" stop-color="#7A00A8"/>
+                </linearGradient>
+              </defs>
+              <ellipse cx="50" cy="30" rx="26" ry="9" fill="none" stroke="#FFD700" stroke-width="4"/>
+              <path d="M50 40 C30 45 24 65 30 88 C36 74 44 66 50 64 C56 66 64 74 70 88 C76 65 70 45 50 40Z" fill="url(#haloGrad)"/>
+            </svg>
+          </div>
+          <h1>Descubre a tu Ángel Guardián</h1>
+          <p class="hero-sub">Un cuestionario breve para revelar qué arcángel guía tu camino, con mensajes y afirmaciones para cada día.</p>
+          <button class="btn-primary btn-pulse" id="btn-start-quiz">Descubrir mi ángel <i class="fa-solid fa-arrow-right"></i></button>
+        </div>
+
+        <div class="home-grid" id="home-status-grid">
+          <!-- filled by JS depending on saved state -->
+        </div>
+
+        <div class="quote-card">
+          <i class="fa-solid fa-quote-left"></i>
+          <p id="home-quote">"Nunca caminas solo: siempre hay una luz que te acompaña."</p>
+        </div>
+      </section>
+
+      <!-- QUIZ -->
+      <section class="screen" id="screen-quiz" data-screen hidden>
+        <div class="quiz-topbar">
+          <button class="icon-btn" id="btn-quiz-back"><i class="fa-solid fa-chevron-left"></i></button>
+          <div class="progress-bar"><div class="progress-fill" id="quiz-progress-fill"></div></div>
+          <span class="quiz-step-label" id="quiz-step-label">1/8</span>
+        </div>
+        <div class="quiz-body">
+          <h2 class="quiz-question" id="quiz-question">—</h2>
+          <div class="quiz-options" id="quiz-options"></div>
+        </div>
+      </section>
+
+      <!-- CALCULATING -->
+      <section class="screen" id="screen-loading" data-screen hidden>
+        <div class="loading-wrap">
+          <img src="./img/spinner.gif" width="90" height="90" alt="">
+          <h3 id="loading-text">Conectando con tu ángel...</h3>
+          <p class="loading-sub">Interpretando tus respuestas</p>
+        </div>
+      </section>
+
+      <!-- RESULT / MI ANGEL -->
+      <section class="screen" id="screen-angel" data-screen hidden>
+        <div id="angel-empty" class="empty-state" hidden>
+          <i class="fa-solid fa-feather"></i>
+          <h3>Todavía no descubriste tu ángel</h3>
+          <p>Completa el cuestionario para revelar quién te acompaña.</p>
+          <button class="btn-primary" id="btn-empty-start">Hacer el test</button>
+        </div>
+
+        <div id="angel-result" class="angel-result" hidden>
+          <div class="angel-card">
+            <div class="angel-badge" id="angel-symbol"></div>
+            <span class="angel-eyebrow">Tu ángel guardián es</span>
+            <h1 class="angel-name" id="angel-name">—</h1>
+            <span class="angel-virtue" id="angel-virtue">—</span>
+          </div>
+
+          <div class="info-card">
+            <h4><i class="fa-solid fa-scroll"></i> Tu mensaje</h4>
+            <p id="angel-message">—</p>
+          </div>
+
+          <div class="info-card">
+            <h4><i class="fa-solid fa-hands-praying"></i> Oración de conexión</h4>
+            <p id="angel-prayer">—</p>
+          </div>
+
+          <div class="info-card affirmation-card">
+            <h4><i class="fa-solid fa-star"></i> Afirmación diaria</h4>
+            <p id="angel-affirmation">—</p>
+          </div>
+
+          <button class="btn-secondary" id="btn-retake">Repetir el test</button>
+        </div>
+      </section>
+
+      <!-- MESSAGES -->
+      <section class="screen" id="screen-messages" data-screen hidden>
+        <div class="messages-tabs">
+          <button class="msg-tab active" data-msgtab="daily">Mensaje del día</button>
+          <button class="msg-tab" data-msgtab="fav">Favoritos <span id="fav-count"></span></button>
+        </div>
+
+        <div id="messages-daily" class="messages-pane">
+          <div class="message-card" id="daily-message-card">
+            <i class="fa-solid fa-dove"></i>
+            <p id="daily-message-text">—</p>
+            <button class="fav-btn" id="btn-fav-daily"><i class="fa-regular fa-heart"></i></button>
+          </div>
+          <button class="btn-secondary" id="btn-new-message"><i class="fa-solid fa-shuffle"></i> Otro mensaje</button>
+        </div>
+
+        <div id="messages-fav" class="messages-pane" hidden>
+          <div id="fav-list" class="fav-list"></div>
+          <p class="empty-hint" id="fav-empty-hint" hidden>Aún no guardaste mensajes. Tocá el corazón en un mensaje para guardarlo acá.</p>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Bottom tab bar -->
+    <nav class="tabbar">
+      <button class="tab-btn active" data-tab="home"><i class="fa-solid fa-house"></i><span>Inicio</span></button>
+      <button class="tab-btn" data-tab="quiz"><i class="fa-solid fa-list-check"></i><span>Test</span></button>
+      <button class="tab-btn" data-tab="angel"><i class="fa-solid fa-feather-pointed"></i><span>Mi Ángel</span></button>
+      <button class="tab-btn" data-tab="messages"><i class="fa-solid fa-envelope-open-text"></i><span>Mensajes</span></button>
+    </nav>
+
+  </div>
+</div>
+
+<script src="./js/app.js"></script>
+</body>
+</html>
