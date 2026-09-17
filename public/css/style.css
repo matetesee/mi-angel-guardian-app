@@ -663,3 +663,83 @@ p { line-height: 1.5; }
   display: block;
   margin-bottom: 4px;
 }
+
+/* Speak (text-to-speech) buttons */
+.info-card h4 {
+  position: relative;
+}
+.speak-btn {
+  margin-left: auto;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.08);
+  color: #ffe9a8;
+  font-size: 0.78rem;
+  flex-shrink: 0;
+}
+.speak-btn:hover { background: rgba(255,255,255,0.16); }
+.speak-btn.speaking { color: var(--gold); background: rgba(255,215,0,0.18); animation: pulse-animation 1s infinite; }
+.card-speak-btn {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+}
+
+/* Stats grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.stats-grid .stat-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 12px;
+  padding: 12px 8px;
+  text-align: center;
+}
+.stats-grid .stat-num { font-size: 1.4rem; font-weight: 800; color: var(--gold); }
+.stats-grid .stat-label { font-size: 0.7rem; color: var(--text-dim); }
+
+/* Oracle card */
+.oracle-card {
+  background: linear-gradient(160deg, rgba(122,0,168,0.55), rgba(242,95,185,0.18));
+  border: 1px solid rgba(255,215,0,0.35);
+  border-radius: 20px;
+  padding: 34px 22px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  min-height: 220px;
+  justify-content: center;
+}
+.oracle-facedown {
+  width: 84px;
+  height: 118px;
+  border-radius: 14px;
+  border: 2px solid var(--gold);
+  background: linear-gradient(160deg, rgba(122,0,168,0.8), rgba(21,10,36,0.9));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  color: var(--gold);
+  animation: glow-up 2s ease-in-out infinite alternate;
+}
+.oracle-card h4 { font-size: 1rem; }
+.oracle-card .oracle-reveal-hint { color: var(--text-dim); font-size: 0.85rem; }
+.oracle-card .oracle-icon { font-size: 1.8rem; color: var(--gold); }
+.oracle-card .oracle-title { font-size: 1.15rem; font-weight: 800; }
+.oracle-card .oracle-text { color: var(--text-dim); font-size: 0.95rem; }
+
+/* Zodiac line */
+#perfil-zodiac-line { margin-top: 8px; }

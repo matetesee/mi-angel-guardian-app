@@ -163,9 +163,56 @@
     { key: "escritor", icon: "fa-pen-nib", label: "Alma Escritora", check: function (s) { return (s.journal || []).length >= 5; } },
     { key: "numerologia", icon: "fa-hashtag", label: "Numerología", check: function (s) { return !!s.birthdate; } },
     { key: "explorador", icon: "fa-compass", label: "Explorador", check: function (s) { return Object.keys(s.messageHistory || {}).length >= 5; } },
+    { key: "vidente", icon: "fa-eye", label: "Vidente", check: function (s) { return Object.keys(s.oracleHistory || {}).length >= 5; } },
   ];
 
   var MONTHS_ES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+
+  var ORACLE_CARDS = [
+    { icon: "fa-shield-heart", title: "Protección", text: "Estás cubierto por una luz protectora. Nada de lo que temés tiene más poder que la fuerza que te acompaña hoy." },
+    { icon: "fa-hand-holding-heart", title: "Confianza", text: "Es momento de confiar en el proceso, aunque no veas el camino completo. Un paso a la vez es suficiente." },
+    { icon: "fa-spa", title: "Sanación", text: "Una vieja herida está lista para cerrar. Permitite sentir para poder soltar." },
+    { icon: "fa-coins", title: "Abundancia", text: "La abundancia no es solo dinero: hoy notá todo lo que ya tenés y merecés." },
+    { icon: "fa-lightbulb", title: "Claridad", text: "La respuesta que buscabas va a aparecer en un momento de calma, no de ansiedad." },
+    { icon: "fa-dove", title: "Perdón", text: "Perdonar no es olvidar, es liberarte del peso que ya no te pertenece." },
+    { icon: "fa-seedling", title: "Nuevos comienzos", text: "Un ciclo nuevo se abre frente a vos. Animate a dar el primer paso, aunque sea pequeño." },
+    { icon: "fa-hourglass-half", title: "Paciencia", text: "Lo que estás construyendo necesita tiempo. No te compares con el ritmo de nadie más." },
+    { icon: "fa-fire", title: "Coraje", text: "Tenés más valor del que creés. Hoy es un buen día para animarte a eso que venís postergando." },
+    { icon: "fa-heart", title: "Gratitud", text: "Agradecer lo pequeño abre la puerta a que lleguen cosas más grandes." },
+    { icon: "fa-eye", title: "Intuición", text: "Tu primera corazonada de hoy merece más atención de la que le estás dando." },
+    { icon: "fa-feather", title: "Renacimiento", text: "Algo en vos está renaciendo. Dejá atrás la versión que ya cumplió su propósito." },
+  ];
+
+  var ZODIAC_ICON = "fa-star-and-crescent";
+  var ZODIAC_SIGNS = [
+    { key: "aries", name: "Aries", startMonth: 3, startDay: 21, endMonth: 4, endDay: 19 },
+    { key: "tauro", name: "Tauro", startMonth: 4, startDay: 20, endMonth: 5, endDay: 20 },
+    { key: "geminis", name: "Géminis", startMonth: 5, startDay: 21, endMonth: 6, endDay: 20 },
+    { key: "cancer", name: "Cáncer", startMonth: 6, startDay: 21, endMonth: 7, endDay: 22 },
+    { key: "leo", name: "Leo", startMonth: 7, startDay: 23, endMonth: 8, endDay: 22 },
+    { key: "virgo", name: "Virgo", startMonth: 8, startDay: 23, endMonth: 9, endDay: 22 },
+    { key: "libra", name: "Libra", startMonth: 9, startDay: 23, endMonth: 10, endDay: 22 },
+    { key: "escorpio", name: "Escorpio", startMonth: 10, startDay: 23, endMonth: 11, endDay: 21 },
+    { key: "sagitario", name: "Sagitario", startMonth: 11, startDay: 22, endMonth: 12, endDay: 21 },
+    { key: "capricornio", name: "Capricornio", startMonth: 12, startDay: 22, endMonth: 1, endDay: 19 },
+    { key: "acuario", name: "Acuario", startMonth: 1, startDay: 20, endMonth: 2, endDay: 18 },
+    { key: "piscis", name: "Piscis", startMonth: 2, startDay: 19, endMonth: 3, endDay: 20 },
+  ];
+
+  var HOROSCOPE_TEMPLATES = [
+    "Hoy es un buen día para escuchar tu intuición antes de tomar decisiones importantes en el amor.",
+    "Tu energía está alta: aprovechá para avanzar en ese proyecto que venías postergando.",
+    "Evitá discusiones innecesarias hoy; el silencio a veces dice más que las palabras.",
+    "El dinero pide organización: revisá tus gastos antes de hacer una nueva compra.",
+    "En el amor, la sinceridad va a abrirte puertas que creías cerradas.",
+    "Es un día ideal para el descanso y la introspección, no fuerces nada.",
+    "Una noticia inesperada puede cambiar tus planes de la semana; mantené la mente abierta.",
+    "Tu creatividad está en su punto más alto, dejate inspirar por lo que ves a tu alrededor.",
+    "Cuidá tu energía: rodeate de personas que sumen, no que resten.",
+    "El trabajo en equipo te va a traer mejores resultados que ir en soledad hoy.",
+    "Un vínculo del pasado podría reaparecer; vos decidís qué lugar darle.",
+    "Confiá en tu proceso: los resultados están más cerca de lo que pensás.",
+  ];
 
   function defaultState() {
     return {
@@ -174,15 +221,19 @@
       favorites: [],
       lastDailyIndex: null,
       lastDailyDate: null,
+      lastOracleIndex: null,
+      lastOracleDate: null,
       name: null,
       birthdate: null,
       journal: [],
       streak: { count: 0, longest: 0, lastVisitDate: null },
       messageHistory: {},
+      oracleHistory: {},
     };
   }
 
   var state = loadState();
+  var oracleRevealedToday = false;
 
   function loadState() {
     try {
@@ -194,6 +245,7 @@
       return Object.assign(base, parsed, {
         streak: Object.assign(base.streak, parsed.streak || {}),
         messageHistory: parsed.messageHistory || {},
+        oracleHistory: parsed.oracleHistory || {},
         journal: parsed.journal || [],
         favorites: parsed.favorites || [],
       });
@@ -475,6 +527,83 @@
     }
   }
 
+  // ---------- Zodiac & horoscope ----------
+  function computeZodiacSign(birthdate) {
+    var parts = birthdate.split("-");
+    var month = parseInt(parts[1], 10);
+    var day = parseInt(parts[2], 10);
+    for (var i = 0; i < ZODIAC_SIGNS.length; i++) {
+      var z = ZODIAC_SIGNS[i];
+      if (z.startMonth <= z.endMonth) {
+        if ((month === z.startMonth && day >= z.startDay) || (month === z.endMonth && day <= z.endDay) || (month > z.startMonth && month < z.endMonth)) {
+          return z;
+        }
+      } else {
+        if ((month === z.startMonth && day >= z.startDay) || (month === z.endMonth && day <= z.endDay) || month > z.startMonth || month < z.endMonth) {
+          return z;
+        }
+      }
+    }
+    return null;
+  }
+
+  function hashStr(s) {
+    var h = 0;
+    for (var i = 0; i < s.length; i++) {
+      h = (h * 31 + s.charCodeAt(i)) | 0;
+    }
+    return Math.abs(h);
+  }
+
+  function getHoroscope(signKey) {
+    var seed = hashStr(signKey + dateKey(new Date()));
+    return HOROSCOPE_TEMPLATES[seed % HOROSCOPE_TEMPLATES.length];
+  }
+
+  function renderHoroscopeBlock(container, editable) {
+    if (state.birthdate) {
+      var z = computeZodiacSign(state.birthdate);
+      container.innerHTML =
+        '<div class="number-pill"><i class="fa-solid ' + ZODIAC_ICON + '"></i> ' + z.name + "</div>" +
+        "<p>" + getHoroscope(z.key) + "</p>";
+    } else if (editable) {
+      container.innerHTML = '<p class="tile-sub">Cargá tu fecha de nacimiento arriba y guardá para ver tu horóscopo del día.</p>';
+    } else {
+      container.innerHTML =
+        '<div class="number-empty"><p>Todavía no cargaste tu fecha de nacimiento.</p>' +
+        '<button class="btn-secondary" id="btn-goto-perfil-horoscope">Agregarla en Mi Perfil</button></div>';
+      var btn = container.querySelector("#btn-goto-perfil-horoscope");
+      if (btn) btn.addEventListener("click", function () { showScreen("perfil"); });
+    }
+  }
+
+  // ---------- Text to speech ----------
+  function speak(text, btn) {
+    if (!("speechSynthesis" in window)) {
+      alert("Tu navegador no soporta la lectura en voz alta.");
+      return;
+    }
+    if (window.speechSynthesis.speaking) {
+      window.speechSynthesis.cancel();
+      document.querySelectorAll(".speak-btn.speaking").forEach(function (b) { b.classList.remove("speaking"); });
+      return;
+    }
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = "es-ES";
+    u.rate = 0.95;
+    u.onend = function () { if (btn) btn.classList.remove("speaking"); };
+    u.onerror = function () { if (btn) btn.classList.remove("speaking"); };
+    if (btn) btn.classList.add("speaking");
+    window.speechSynthesis.speak(u);
+  }
+
+  document.getElementById("btn-speak-prayer").addEventListener("click", function () {
+    speak(document.getElementById("angel-prayer").textContent, this);
+  });
+  document.getElementById("btn-speak-daily").addEventListener("click", function () {
+    speak(document.getElementById("daily-message-text").textContent, this);
+  });
+
   // ---------- Angel result ----------
   function renderAngel() {
     var empty = document.getElementById("angel-empty");
@@ -494,6 +623,7 @@
     document.getElementById("angel-prayer").textContent = a.prayer;
     document.getElementById("angel-affirmation").textContent = getDailyMessage().text;
     renderAngelNumberBlock(document.getElementById("angel-number-content"), false);
+    renderHoroscopeBlock(document.getElementById("angel-horoscope-content"), false);
   }
 
   // ---------- Messages ----------
@@ -584,15 +714,79 @@
     renderMessages();
   });
 
+  // ---------- Oracle (angelic cards) ----------
+  function getOracleCard() {
+    var today = dateKey(new Date());
+    if (state.lastOracleDate === today && state.lastOracleIndex != null) {
+      return { index: state.lastOracleIndex, card: ORACLE_CARDS[state.lastOracleIndex] };
+    }
+    var idx = Math.floor(Math.random() * ORACLE_CARDS.length);
+    state.lastOracleDate = today;
+    state.lastOracleIndex = idx;
+    saveState();
+    return { index: idx, card: ORACLE_CARDS[idx] };
+  }
+
+  function renderOracle() {
+    var wrap = document.getElementById("oracle-card");
+    var shuffleBtn = document.getElementById("btn-oracle-shuffle");
+    var today = dateKey(new Date());
+    if (state.lastOracleDate !== today) oracleRevealedToday = false;
+
+    if (!oracleRevealedToday) {
+      shuffleBtn.hidden = true;
+      wrap.innerHTML =
+        '<div class="oracle-facedown"><i class="fa-solid fa-star"></i></div>' +
+        "<h4>Tu carta angelical de hoy te espera</h4>" +
+        '<p class="oracle-reveal-hint">Respirá hondo y tocá el mazo para revelarla.</p>' +
+        '<button class="btn-primary" id="btn-oracle-reveal">Revelar mi carta <i class="fa-solid fa-hand-sparkles"></i></button>';
+      document.getElementById("btn-oracle-reveal").addEventListener("click", function () {
+        var o = getOracleCard();
+        state.oracleHistory[dateKey(new Date())] = o.index;
+        saveState();
+        oracleRevealedToday = true;
+        renderOracle();
+        renderBadges();
+      });
+    } else {
+      var o = getOracleCard();
+      shuffleBtn.hidden = false;
+      wrap.innerHTML =
+        '<i class="fa-solid ' + o.card.icon + ' oracle-icon"></i>' +
+        '<div class="oracle-title">' + o.card.title + "</div>" +
+        '<p class="oracle-text">' + o.card.text + "</p>" +
+        '<button class="speak-btn" id="btn-speak-oracle" title="Escuchar en voz alta"><i class="fa-solid fa-volume-high"></i></button>';
+      document.getElementById("btn-speak-oracle").addEventListener("click", function () {
+        speak(o.card.title + ". " + o.card.text, this);
+      });
+    }
+  }
+
+  function shuffleOracle() {
+    var idx;
+    do {
+      idx = Math.floor(Math.random() * ORACLE_CARDS.length);
+    } while (idx === state.lastOracleIndex && ORACLE_CARDS.length > 1);
+    state.lastOracleIndex = idx;
+    state.lastOracleDate = dateKey(new Date());
+    state.oracleHistory[state.lastOracleDate] = idx;
+    saveState();
+    renderOracle();
+  }
+
+  document.getElementById("btn-oracle-shuffle").addEventListener("click", shuffleOracle);
+
   document.querySelectorAll("[data-msgtab]").forEach(function (tab) {
     tab.addEventListener("click", function () {
       document.querySelectorAll("[data-msgtab]").forEach(function (t) { t.classList.remove("active"); });
       tab.classList.add("active");
       var which = tab.dataset.msgtab;
       document.getElementById("messages-daily").hidden = which !== "daily";
+      document.getElementById("messages-oracle").hidden = which !== "oracle";
       document.getElementById("messages-fav").hidden = which !== "fav";
       document.getElementById("messages-cal").hidden = which !== "cal";
       if (which === "fav" || which === "cal") renderMessages();
+      if (which === "oracle") renderOracle();
     });
   });
 
@@ -621,12 +815,37 @@
     });
   }
 
+  function renderZodiacLine() {
+    var line = document.getElementById("perfil-zodiac-line");
+    if (state.birthdate) {
+      var z = computeZodiacSign(state.birthdate);
+      line.innerHTML = 'Tu signo: <i class="fa-solid ' + ZODIAC_ICON + '"></i> ' + z.name;
+    } else {
+      line.textContent = "";
+    }
+  }
+
+  function renderStats() {
+    var grid = document.getElementById("stats-grid");
+    var stats = [
+      { num: Object.keys(state.messageHistory || {}).length, label: "días activos" },
+      { num: (state.journal || []).length, label: "reflexiones" },
+      { num: (state.favorites || []).length, label: "favoritos" },
+      { num: Object.keys(state.oracleHistory || {}).length, label: "cartas reveladas" },
+    ];
+    grid.innerHTML = stats.map(function (s) {
+      return '<div class="stat-tile"><span class="stat-num">' + s.num + '</span><span class="stat-label">' + s.label + "</span></div>";
+    }).join("");
+  }
+
   function renderPerfil() {
     document.getElementById("perfil-name").value = state.name || "";
     document.getElementById("perfil-birthdate").value = state.birthdate || "";
+    renderZodiacLine();
     renderAngelNumberBlock(document.getElementById("perfil-number-content"), true);
     document.getElementById("streak-current").textContent = state.streak.count || 0;
     document.getElementById("streak-longest").textContent = state.streak.longest || 0;
+    renderStats();
     renderBadges();
     renderJournal();
   }

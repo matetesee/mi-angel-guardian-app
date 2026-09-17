@@ -146,7 +146,7 @@
           </div>
 
           <div class="info-card">
-            <h4><i class="fa-solid fa-hands-praying"></i> Oración de conexión</h4>
+            <h4><i class="fa-solid fa-hands-praying"></i> Oración de conexión <button class="speak-btn" id="btn-speak-prayer" title="Escuchar en voz alta"><i class="fa-solid fa-volume-high"></i></button></h4>
             <p id="angel-prayer">—</p>
           </div>
 
@@ -160,6 +160,11 @@
             <div id="angel-number-content"><!-- filled by JS --></div>
           </div>
 
+          <div class="info-card number-card" id="angel-horoscope-card">
+            <h4><i class="fa-solid fa-star-and-crescent"></i> Horóscopo de hoy</h4>
+            <div id="angel-horoscope-content"><!-- filled by JS --></div>
+          </div>
+
           <button class="btn-secondary" id="btn-retake">Repetir el test</button>
         </div>
       </section>
@@ -168,6 +173,7 @@
       <section class="screen" id="screen-messages" data-screen hidden>
         <div class="messages-tabs">
           <button class="msg-tab active" data-msgtab="daily">Hoy</button>
+          <button class="msg-tab" data-msgtab="oracle">Oráculo</button>
           <button class="msg-tab" data-msgtab="fav">Favoritos <span id="fav-count"></span></button>
           <button class="msg-tab" data-msgtab="cal">Calendario</button>
         </div>
@@ -177,8 +183,16 @@
             <i class="fa-solid fa-dove"></i>
             <p id="daily-message-text">—</p>
             <button class="fav-btn" id="btn-fav-daily"><i class="fa-regular fa-heart"></i></button>
+            <button class="speak-btn card-speak-btn" id="btn-speak-daily" title="Escuchar en voz alta"><i class="fa-solid fa-volume-high"></i></button>
           </div>
           <button class="btn-secondary" id="btn-new-message"><i class="fa-solid fa-shuffle"></i> Otro mensaje</button>
+        </div>
+
+        <div id="messages-oracle" class="messages-pane" hidden>
+          <div class="oracle-card" id="oracle-card">
+            <!-- filled by JS: face-down or revealed -->
+          </div>
+          <button class="btn-secondary" id="btn-oracle-shuffle" hidden><i class="fa-solid fa-shuffle"></i> Sacar otra carta</button>
         </div>
 
         <div id="messages-fav" class="messages-pane" hidden>
@@ -207,6 +221,7 @@
             <input class="field-input" id="perfil-name" type="text" maxlength="30" placeholder="Tu nombre">
             <label class="field-label" for="perfil-birthdate">Fecha de nacimiento</label>
             <input class="field-input" id="perfil-birthdate" type="date">
+            <p class="tile-sub" id="perfil-zodiac-line"></p>
             <button class="btn-secondary" id="btn-perfil-save" style="margin-top:10px">Guardar</button>
           </div>
 
@@ -221,6 +236,11 @@
               <div class="streak-stat"><span class="streak-num" id="streak-current">0</span><span class="streak-label">días seguidos</span></div>
               <div class="streak-stat"><span class="streak-num" id="streak-longest">0</span><span class="streak-label">racha máxima</span></div>
             </div>
+          </div>
+
+          <div class="info-card">
+            <h4><i class="fa-solid fa-chart-simple"></i> Tu camino</h4>
+            <div class="stats-grid" id="stats-grid"><!-- filled by JS --></div>
           </div>
 
           <div class="info-card">
